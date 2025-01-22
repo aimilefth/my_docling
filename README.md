@@ -66,3 +66,22 @@ After it finishes, look in the outputs/ folder to see the .md file.
     ```
 
 That’s it! Your `.md` output will be located in the `outputs/` folder.
+
+## Removing Embedded Images from Markdown
+
+To remove all embedded images (e.g., `![Image](...)`) from a markdown file, use the `remove_images.sh` script.
+
+### Usage
+
+Run the following command, replacing `myfile.md` with the path to your markdown file:
+
+```bash
+bash remove_images.sh myfile.md
+```
+
+The script will create a new markdown file in the same directory, with _imageless appended to the original filename. For example:
+
+    Input file: `myfile.md`
+    Output file: `myfile_imageless.md`
+
+This new file will have all lines containing embedded images removed while preserving the rest of the content.
