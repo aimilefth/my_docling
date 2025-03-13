@@ -1,87 +1,109 @@
 # Docling Docker Container
 
-This Docker image runs [Docling](https://pypi.org/project/docling/) to convert PDF files into Markdown files using a containerized environment.
+This repository provides a Docker container for converting PDF files to Markdown using [Docling](https://pypi.org/project/docling/). The container supports both single file conversion and recursive directory conversion with an option to remove embedded images from the output Markdown files.
+
+## Features
+
+- **Single File Conversion:** Convert a single PDF file located in the mounted documents folder.
+- **Recursive Directory Conversion:** Set the `DIRECTORY` environment variable to process PDFs recursively from a given directory, preserving folder structure.
+- **Image Removal:** Optionally remove embedded images (e.g., `![Image](...)`) from the generated Markdown files by setting `IMAGELESS` to `True`.
+- **Host-side Script:** A `docker_run.sh` script is provided to simplify passing arguments and environment variables.
 
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) must be installed.
 
-## How to Build
+## Building the Docker Image
 
-Clone the repository and navigate to the folder containing the `Dockerfile`. Then build the Docker image locally:
+Run the following command in the project root (where the Dockerfile is located):
 
 ```bash
-docker build -t aimilefth/docling --push .
+docker build -t aimilefth/docling:latest --push .
 ```
 
-## How to Use
 
-Make sure you have a PDF file in the ./documents folder of your project.
+## Using the Container
 
- Run the container, mounting your local documents and outputs folders:
+You can run the container in two ways: directly using `docker run` or by using the provided host-side script `docker_run.sh`.
 
-```bash
+### Using Docker Run Directly
+
+#### Single File Conversion
+```
 docker run --rm \
   -v $(pwd)/documents:/app/documents \
   -v $(pwd)/outputs:/app/outputs \
   aimilefth/docling myfile.pdf
 ```
 
-Replace myfile.pdf with the name of the PDF you wish to convert.
-
-The Docker container will create a Markdown file in the ./outputs directory.
-
-## Example
-
-Assuming myfile.pdf is placed in your local documents folder:
-
-```bash
+#### Single File Conversion with Image Removal
+```
 docker run --rm \
+  -e IMAGELESS=True \
   -v $(pwd)/documents:/app/documents \
   -v $(pwd)/outputs:/app/outputs \
   aimilefth/docling myfile.pdf
 ```
 
-After it finishes, look in the outputs/ folder to see the .md file.
-
-
-## Putting It All Together
-
-1.  **Build** the Docker image from within the project folder (same location as `Dockerfile`):
-    ```bash
-    docker build -t aimilefth/docling .
-    ```
-
-2.  **Push** the Docker image to Docker Hub (requires you to be logged in):
-    ```bash
-    docker push aimilefth/docling
-    ```
-
-3.  **Run** the container (pulling from Docker Hub if you haven’t built locally):
-    ```bash
-    docker run --rm \
-      -v $(pwd)/documents:/app/documents \
-      -v $(pwd)/outputs:/app/outputs \
-      aimilefth/docling myfile.pdf
-    ```
-
-That’s it! Your `.md` output will be located in the `outputs/` folder.
-
-## Removing Embedded Images from Markdown
-
-To remove all embedded images (e.g., `![Image](...)`) from a markdown file, use the `remove_images.sh` script.
-
-### Usage
-
-Run the following command, replacing `myfile.md` with the path to your markdown file:
-
-```bash
-bash remove_images.sh myfile.md
+#### Recursive Directory Conversion
+```
+docker run --rm \
+  -e DIRECTORY=True \
+  -v $(pwd)/documents:/app/documents \
+  -v $(pwd)/outputs:/app/outputs \
+  aimilefth/docling my_subdir
 ```
 
-The script will create a new markdown file in the same directory, with _imageless appended to the original filename. For example:
+#### Recursive Conversion with Image Removal
+```
+docker run --rm \
+  -e DIRECTORY=True \
+  -e IMAGELESS=True \
+  -v $(pwd)/documents:/app/documents \
+  -v $(pwd)/outputs:/app/outputs \
+  aimilefth/docling my_subdir
+```
 
-    Input file: `myfile.md`
-    Output file: `myfile_imageless.md`
+### Using the Host Script: docker_run.sh
 
-This new file will have all lines containing embedded images removed while preserving the rest of the content.
+The `docker_run.sh` script simplifies usage by accepting flags:
+
+- **`-p` / `--path`**: Relative path (file or directory) inside the documents folder (required).
+- **`-d` / `--directory`**: Process recursively if present.
+- **`-i` / `--imageless`**: Remove embedded images after conversion if present.
+- **`--docs`**: Optional path to the documents folder (default: `$(pwd)/documents`).
+- **`--outputs`**: Optional path to the outputs folder (default: `$(pwd)/outputs`).
+
+For example, to convert a single file (with default options):
+```
+bash docker_run.sh --path myfile.pdf
+```
+
+To process a directory recursively:
+```
+bash docker_run.sh --path my_subdir --directory
+```
+
+To process a directory recursively with image removal:
+```
+bash docker_run.sh --path my_subdir --directory --imageless
+```
+
+Or, using custom documents and outputs paths:
+```
+bash docker_run.sh --path my_subdir --directory --imageless --docs /path/to/my/docs --outputs /path/to/my/outputs
+```
+
+
+## Project Structure
+
+- **Dockerfile**: Defines the container image.
+- **entrypoint.sh**: The container entrypoint that handles both single file and recursive directory conversion based on environment variables.
+- **remove_images_md.sh**: Script used to remove embedded images from generated Markdown files.
+- **docker_run.sh**: Host-side script that simplifies running the container with the proper arguments and volume mounts.
+- **documents/**: Directory containing source PDF files.
+- **outputs/**: Directory where converted Markdown files are saved.
+
+## Summary
+
+This project enables flexible PDF to Markdown conversion using Docker and Docling. Adjust the environment variables and script arguments as needed for single file or recursive directory processing and optional image removal.
