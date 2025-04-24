@@ -78,6 +78,7 @@ echo "  Outputs:     $OUTPUTS_PATH"
 
 # Run the Docker container with the proper environment variables and volume mounts.
 docker run --rm \
+  --pull=always \
   -e DIRECTORY="$DIRECTORY" \
   -e IMAGELESS="$IMAGELESS" \
   -v "$DOCS_PATH":/app/documents \
